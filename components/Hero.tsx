@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { TypeAnimation } from 'react-type-animation';
 import { ASSETS_BUCKET, CV_PREFIX } from '../constants';
 import { fetchLatestFileUrl } from '../services/api';
+import { trackEvent } from '../services/analytics';
 
 const LocationIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -23,6 +24,16 @@ const Hero: React.FC = () => {
         setCvUrl(null);
       });
   }, []);
+
+  const handleCvDownload = () => {
+    if (!cvUrl) return;
+    const fileName = decodeURIComponent(cvUrl.split('/').pop() || 'cv.pdf');
+    trackEvent('download_cv', {
+      file_name: fileName,
+      file_extension: fileName.split('.').pop(),
+      link_url: cvUrl,
+    });
+  };
 
   return (
     <section id="hero" className="min-h-screen flex flex-col justify-center items-start">
@@ -67,6 +78,7 @@ const Hero: React.FC = () => {
                download
                target="_blank"
                rel="noopener noreferrer"
+               onClick={handleCvDownload}
                className="px-8 py-4 bg-blue-600 text-white rounded-md font-mono text-lg hover:bg-blue-700 dark:bg-accent-blue dark:text-dark-bg dark:hover:bg-accent-blue/80 transition-colors duration-300">
               Download CV
             </a>
