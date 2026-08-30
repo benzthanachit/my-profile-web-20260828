@@ -152,7 +152,7 @@ export const FAQ_ITEMS: FAQItem[] = [
   {
     id: 1,
     question: 'Who is Thanachit Sengsalee?',
-    answer: 'Thanachit Sengsalee is a Data Engineer based in Hat Yai, Thailand, with 4+ years of experience building and operating batch and streaming data pipelines on Google Cloud Platform.',
+    answer: 'Thanachit Sengsalee is a Data Engineer based in Hat Yai, Thailand, with 5+ years of software engineering experience - he started as a full-stack developer and has spent the last 2+ years focused on batch and streaming data pipelines on Google Cloud Platform.',
   },
   {
     id: 2,

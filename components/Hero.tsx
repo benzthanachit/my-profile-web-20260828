@@ -62,7 +62,7 @@ const Hero: React.FC = () => {
           />
         </div>
         <p className="max-w-2xl text-gray-600 dark:text-slate mb-3">
-          Data Engineer with 4+ years building and operating batch and streaming pipelines end-to-end on Google Cloud - BigQuery, Dataform, dbt, Pub/Sub, Dataflow, Cloud Run - covering ingestion, modeling, data quality, and BI.
+          Full-stack developer turned Data Engineer, with 5+ years in software and 2+ years focused on batch and streaming pipelines on Google Cloud - BigQuery, Dataform, dbt, Pub/Sub, Dataflow, Cloud Run - covering ingestion, modeling, data quality, and BI.
         </p>
         <p className="flex items-center gap-2 text-gray-500 dark:text-slate text-sm mb-8">
           <LocationIcon className="h-4 w-4" />
