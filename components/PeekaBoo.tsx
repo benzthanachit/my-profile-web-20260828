@@ -7,15 +7,42 @@ const CYCLE_DURATION_MS = 10000; // time from one peek's start to the next
 const HIDDEN_DURATION_MS = CYCLE_DURATION_MS - PEEK_DURATION_MS;
 const INITIAL_DELAY_MS = 2500;
 
-type CornerName = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+const SIZE = 80; // fixed circle diameter (px), same at every breakpoint so the vw/vh math below stays exact
+const OVERLAP = 24; // px past the edge it sits at while peeking, like the corner it's poking out of
+const DODGE = 70; // extra px pushed further off-screen while hidden
 
-const CORNERS: Record<CornerName, { style: React.CSSProperties; hidden: string }> = {
-  'bottom-right': { style: { bottom: '-24px', right: '-24px' }, hidden: 'translate(70px, 70px)' },
-  'bottom-left': { style: { bottom: '-24px', left: '-24px' }, hidden: 'translate(-70px, 70px)' },
-  'top-right': { style: { top: '-24px', right: '-24px' }, hidden: 'translate(70px, -70px)' },
-  'top-left': { style: { top: '-24px', left: '-24px' }, hidden: 'translate(-70px, -70px)' },
+type CornerName = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+type Axis = 'near' | 'far';
+
+const CORNER_AXES: Record<CornerName, { x: Axis; y: Axis }> = {
+  'top-left': { x: 'near', y: 'near' },
+  'top-right': { x: 'far', y: 'near' },
+  'bottom-left': { x: 'near', y: 'far' },
+  'bottom-right': { x: 'far', y: 'far' },
 };
-const CORNER_NAMES = Object.keys(CORNERS) as CornerName[];
+const CORNER_NAMES = Object.keys(CORNER_AXES) as CornerName[];
+
+// The wrapper is always anchored at the viewport's top-left (top:0; left:0) and never moves
+// its own position/anchor properties - every corner, and the peek/hidden states, are expressed
+// purely as a `transform: translate()` value using vw/vh so no JS viewport measurement is
+// needed. Keeping it to one always-transitioned property avoids the instability of swapping
+// which CSS side (top/bottom, left/right) is set, which broke the transition mid-dodge.
+// `extraPx` folds the dodge offset into the same expression instead of nesting a second
+// calc() around this one - nested calc() didn't reliably resolve in testing.
+const edge = (axis: Axis, viewportUnit: 'vw' | 'vh', extraPx: number) =>
+  axis === 'near' ? `${-OVERLAP + extraPx}px` : `calc(100${viewportUnit} - ${SIZE - OVERLAP - extraPx}px)`;
+
+const peekTransform = (corner: CornerName) => {
+  const { x, y } = CORNER_AXES[corner];
+  return `translate(${edge(x, 'vw', 0)}, ${edge(y, 'vh', 0)})`;
+};
+
+const hiddenTransform = (corner: CornerName) => {
+  const { x, y } = CORNER_AXES[corner];
+  const dodgeX = x === 'near' ? -DODGE : DODGE;
+  const dodgeY = y === 'near' ? -DODGE : DODGE;
+  return `translate(${edge(x, 'vw', dodgeX)}, ${edge(y, 'vh', dodgeY)})`;
+};
 
 const randomCorner = (exclude?: CornerName): CornerName => {
   const options = exclude ? CORNER_NAMES.filter(c => c !== exclude) : CORNER_NAMES;
@@ -60,22 +87,20 @@ const PeekaBoo: React.FC = () => {
 
   if (!photoUrl) return null;
 
-  const { style, hidden } = CORNERS[corner];
-
   return (
     <div
-      className="fixed z-40 pointer-events-none"
+      className="fixed top-0 left-0 z-[60] pointer-events-none"
       style={{
-        ...style,
-        transform: isPeeking ? 'translate(0, 0)' : hidden,
+        transform: isPeeking ? peekTransform(corner) : hiddenTransform(corner),
         transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}
     >
       <button
-        onClick={peekAtNewCorner}
+        onClick={() => isPeeking && peekAtNewCorner()}
         aria-hidden="true"
         tabIndex={-1}
-        className={`pointer-events-auto block w-16 h-16 sm:w-24 sm:h-24 rounded-full border-4 border-blue-600 dark:border-accent-blue shadow-xl overflow-hidden ${isPeeking ? 'animate-peekaboo-wobble' : ''}`}
+        style={{ width: SIZE, height: SIZE }}
+        className={`block rounded-full border-4 border-blue-600 dark:border-accent-blue shadow-xl overflow-hidden ${isPeeking ? 'pointer-events-auto animate-peekaboo-wobble' : 'pointer-events-none'}`}
       >
         <img src={photoUrl} alt="" className="w-full h-full object-cover" />
       </button>
